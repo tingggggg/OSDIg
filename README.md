@@ -44,8 +44,8 @@ get_el:
 
 ```
 #define SPSR_MASK_ALL 		(7 << 6) // change EL to EL1
-#define SPSR_EL1h			(5 << 0) // EL1h mode means that we are using EL1 dedicated stack pointer
-#define SPSR_VALUE			(SPSR_MASK_ALL | SPSR_EL1h)
+#define SPSR_EL1h		(5 << 0) // EL1h mode means that we are using EL1 dedicated stack pointer
+#define SPSR_VALUE		(SPSR_MASK_ALL | SPSR_EL1h)
 ```
 
 ```
