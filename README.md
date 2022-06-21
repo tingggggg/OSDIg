@@ -54,8 +54,19 @@ ldr    x0, =SPSR_VALUE
 msr    spsr_el3, x0
 
 // ELR_EL3, Exception Link Register (EL3)
-
 adr    x0, el1_entry        
 msr    elr_el3, x0
 eret 
+```
+#### Result
+```
+void kernel_main(void)
+{
+    ...
+    printf("Hello, Paspberry 3B+\r\n");
+
+    int el = get_el();
+    printf("Exception level: %d\r\n", el);
+    ...
+}
 ```
