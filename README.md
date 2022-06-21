@@ -49,7 +49,13 @@ get_el:
 ```
 
 ```
-...
+// SPSR_EL3, Saved Program Status Register (EL3)
 ldr    x0, =SPSR_VALUE
 msr    spsr_el3, x0
+
+// ELR_EL3, Exception Link Register (EL3)
+
+adr    x0, el1_entry        
+msr    elr_el3, x0
+eret 
 ```
