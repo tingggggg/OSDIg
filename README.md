@@ -22,6 +22,34 @@ void kernel_main(void)
     }
 }
 ```
-![Raspberry Pi GPIO function selector](https://github.com/tingggggg/OSDIg/blob/main/images/l1/l1_result.png)
+![L1 Result](https://github.com/tingggggg/OSDIg/blob/main/images/l1/l1_result.png)
 
 
+## L2 Processor Initialization
+
+It has some essential features that can be utilized by the OS. The first such feature is called "Exception levels".
+
+#### Finding current Exception level
+```
+.globl get_el
+get_el:
+    mrs x0, CurrentEL
+    lsr x0, x0, #2
+    ret
+```
+
+#### Changing current exception level
+1. Address of the current instruction is saved in the `ELR_ELn`  register. (It is called `Exception link register`)
+1. Current processor state is stored in `SPSR_ELn` register (`Saved Program Status Register`)
+
+```
+#define SPSR_MASK_ALL 		(7 << 6) // change EL to EL1
+#define SPSR_EL1h			(5 << 0) // EL1h mode means that we are using EL1 dedicated stack pointer
+#define SPSR_VALUE			(SPSR_MASK_ALL | SPSR_EL1h)
+```
+
+```
+...
+ldr    x0, =SPSR_VALUE
+msr    spsr_el3, x0
+```
