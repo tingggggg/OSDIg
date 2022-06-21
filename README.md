@@ -58,6 +58,7 @@ adr    x0, el1_entry
 msr    elr_el3, x0
 eret 
 ```
+
 #### Result
 ```
 void kernel_main(void)
@@ -70,3 +71,5 @@ void kernel_main(void)
     ...
 }
 ```
+
+![L2 Result](https://github.com/tingggggg/OSDIg/blob/main/images/l2/l2_result.png)
