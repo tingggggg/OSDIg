@@ -1,5 +1,11 @@
 # OSDIg
 
+* [L1 Kernel Initialization](https://github.com/tingggggg/OSDIg#l1-kernel-initializationmini-uart--gpio)
+* [L2 Processor Initialization](https://github.com/tingggggg/OSDIg#l2-processor-initialization)
+* [L3 Interrupt Handling](https://github.com/tingggggg/OSDIg#l3-interrupt-handling)
+
+*****
+
 ## L1 Kernel Initialization(mini uart & GPIO)
 
 #### GPIO alternative function selection 
