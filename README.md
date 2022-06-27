@@ -73,3 +73,77 @@ void kernel_main(void)
 ```
 
 ![L2 Result](https://github.com/tingggggg/OSDIg/blob/main/images/l2/l2_result.png)
+
+## L3 Interrupt Handling
+
+Such asynchronous notifications are called "interrupts" because they interrupt normal execution flow and force the processor to execute an "interrupt handler".
+
+#### Interrupts vs exceptions
+* `Synchronous exception`
+* `IRQ (Interrupt Request)`
+* `FIQ (Fast Interrupt Request)`
+* `SError (System Error)`
+
+
+#### Saving register state
+
+After an exception handler finishes execution, we want all general purpose registers to have the same values they had before the exception was generated.
+
+```
+sub	sp, sp, #S_FRAME_SIZE
+stp	x0, x1, [sp, #16 * 0]
+...
+str	x30, [sp, #16 * 15]
+```
+
+#### Masking/unmasking interrupts
+
+Sometimes a particular piece of code must never be intercepted by an asynchronous interrupt.
+Processor state would be overwritten and lost.
+```
+.globl enable_irq
+enable_irq:
+    msr    daifclr, #2
+    ret
+
+.globl disable_irq
+disable_irq:
+    msr    daifset, #2
+    ret
+```
+
+ARM processor state has 4 bits that are responsible for holding mask status for different types of interrupts. 
+* `D` Masks debug exceptions.
+* `A` Masks SErrors. It is called A because SErrors sometimes are called asynchronous aborts.
+* `I` Masks IRQs
+* `F` Masks FIQs
+
+
+#### Result
+```
+void handle_irq(void)
+{
+    unsigned int irq = get32(IRQ_PENDING_1);
+    switch (irq) {
+        case (SYSTEM_TIMER_IRQ_1):
+            handle_timer_irq();
+            break;
+        ...
+    }
+}
+```
+
+Here we first update compare register so that that next interrupt will be generated after the same time interval. 
+Next, we acknowledge the interrupt by writing 1 to the `TIMER_CS` register.
+In the documentation `TIMER_CS` is called "Timer Control/Status" register.
+```
+void handle_timer_irq( void )
+{
+    curVal += interval;
+    put32(TIMER_C1, curVal);
+    put32(TIMER_CS, TIMER_CS_M1);
+    printf("Timer iterrupt received\n\r");
+}
+```
+
+![L3 Result](https://github.com/tingggggg/OSDIg/blob/main/images/l3/l3_result.png)
