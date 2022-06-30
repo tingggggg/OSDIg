@@ -3,6 +3,7 @@
 * [L1 Kernel Initialization](https://github.com/tingggggg/OSDIg#l1-kernel-initializationmini-uart--gpio)
 * [L2 Processor Initialization](https://github.com/tingggggg/OSDIg#l2-processor-initialization)
 * [L3 Interrupt Handling](https://github.com/tingggggg/OSDIg#l3-interrupt-handling)
+* [L4 Processor Scheduler](https://github.com/tingggggg/OSDIg#l4-processor-scheduler)
 
 *****
 
@@ -153,3 +154,7 @@ void handle_timer_irq( void )
 ```
 
 ![L3 Result](https://github.com/tingggggg/OSDIg/blob/main/images/l3/l3_result.png)
+
+## L4 Processor Scheduler
+
+WIP
