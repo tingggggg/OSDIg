@@ -157,4 +157,59 @@ void handle_timer_irq( void )
 
 ## L4 Processor Scheduler
 
-WIP
+
+#### Task struct
+If we want to manage processes, the first thing we should do is to create a struct that describes a process.
+
+* `cpu_context` This is an embedded structure that contains values of all registers that might be different between the tasks, that are being switched. Accordingly to ARM calling conventions registers x0 - x18 can be overwritten by the called function, so the caller must not assume that the values of those registers will survive after a function call. That's why it doesn't make sense to save x0 - x18 registers.
+* `state` This is the state of the currently running task. For tasks that are just doing some work on the CPU the state will always be `TASK_RUNNING`.
+* `counter` This field is used to determine how long the current task has been running. counter decreases by 1 each timer tick and when it reaches 0 another task is scheduled.
+* `prioritt` When a new task is scheduled its priority is copied to counter. By setting tasks priority, we can regulate the amount of processor time that the task gets relative to other tasks.
+* `preempt_count` If this field has a non-zero value it is an indicator that right now the current task is executing some critical function that must not be interrupted (for example, it runs the scheduling function.).
+
+```
+struct cpu_context {
+    unsigned long x19;
+    ...
+    unsigned long x28;
+    unsigned long fp;
+    unsigned long sp;
+    unsigned long pc;
+};
+
+struct task_struct {
+    struct cpu_context cpu_context;
+    long state;
+    long counter;
+    long priority;
+    long preempt_count;
+};
+```
+
+#### Memory Allocation
+Each task in the system should have its dedicated stack. That's why when creating a new task we must have a way to allocate memory.
+
+The allocator can work only with memory pages (each page is 4 KB in size). There is an array called `mem_map` that for each page in the system holds its status: whether it is allocated or free. Whenever we need to allocate a new page, we just loop through this array and return the first free page. This implementation is based on 2 assumptions:
+
+1. We know the total amount of memory in the system. It is `1 GB - 1 MB` (the last megabyte of memory is reserved for device registers.). This value is stored in the `HIGH_MEMORY` constant.
+2. First 4 MB of memory are reserved for the kernel image and init task stack. This value is stored in `LOW_MEMORY` constant. All memory allocations start right after this point.
+
+```
+static unsigned short mem_map [ PAGING_PAGES ] = {0,};
+
+unsigned long get_free_page()
+{
+    for (int i = 0; i < PAGING_PAGES; i++){
+        if (mem_map[i] == 0){
+            mem_map[i] = 1;
+            return LOW_MEMORY + i*PAGE_SIZE;
+        }
+    }
+    return 0;
+}
+
+void free_page(unsigned long p)
+{
+    mem_map[(p - LOW_MEMORY) / PAGE_SIZE] = 0;
+}
+```
