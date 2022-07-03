@@ -213,3 +213,31 @@ void free_page(unsigned long p)
     mem_map[(p - LOW_MEMORY) / PAGE_SIZE] = 0;
 }
 ```
+
+#### Creating a new task
+
+The stack pointer is set to the top of the newly allocated memory page. `pc` is set to the ret_from_fork function.
+```
+struct task_struct *p;
+p = (struct task_struct *) get_free_page();
+if (!p)
+    return 1;
+...
+
+p->cpu_context.x19 = fn;
+p->cpu_context.x20 = arg;
+p->cpu_context.pc = (unsigned long)ret_from_fork;
+p->cpu_context.sp = (unsigned long)p + THREAD_SIZE;
+```
+
+It calls the function stored in `x19` register with the argument stored in `x20`.
+```
+.globl ret_from_fork
+ret_from_fork:
+    bl    schedule_tail
+    mov    x0, x20
+    blr    x19         //should never return
+```
+
+The function only prepares new task_struct and adds it to the task array. 
+This task will be executed only after schedule function is called.
