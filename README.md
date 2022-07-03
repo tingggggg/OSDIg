@@ -157,7 +157,6 @@ void handle_timer_irq( void )
 
 ## L4 Processor Scheduler
 
-
 #### Task struct
 If we want to manage processes, the first thing we should do is to create a struct that describes a process.
 
@@ -241,3 +240,109 @@ ret_from_fork:
 
 The function only prepares new task_struct and adds it to the task array. 
 This task will be executed only after schedule function is called.
+
+#### Scheduling algorithm
+
+* The first inner `for` loop iterates over all tasks and tries to find a task in `TASK_RUNNING` state with the maximum counter. If such task is found and its counter is greater then 0, we immediately break from the outer `while` loop and switch to this task. If no such task is found this means that no tasks in `TASK_RUNNING` state currently exist or all such tasks have 0 counters. 
+```
+void _schedule(void)
+{
+    preempt_disable();
+    int next,c;
+    struct task_struct * p;
+    while (1) {
+        c = -1;
+        next = 0;
+        for (int i = 0; i < NR_TASKS; i++){
+            p = task[i];
+            if (p && p->state == TASK_RUNNING && p->counter > c) {
+                c = p->counter;
+                next = i;
+            }
+        }
+        if (c) {
+            break;
+        }
+        for (int i = 0; i < NR_TASKS; i++) {
+            p = task[i];
+            if (p) {
+                p->counter = (p->counter >> 1) + p->priority;
+            }
+        }
+    }
+    switch_to(task[next]);
+    preempt_enable();
+}
+```
+
+#### Switching tasks
+After the task in TASK_RUNNING state with non-zero counter is found, switch_to function is called. It looks like this.
+```
+void switch_to(struct task_struct * next)
+{
+    if (current == next)
+        return;
+    struct task_struct * prev = current;
+    current = next;
+    cpu_switch_to(prev, next);
+}
+```
+
+This is the place where the real context switch happens.
+* All calle-saved registers are stored in the order, in which they are defined in cpu_context structure. x30, which is the link register and contains function return address, is stored as pc, current stack pointer is saved as sp and x29 is saved as fp (frame pointer).
+* Callee saved registers are restored from the next `cpu_context`.
+* `ret` Function returns to the location pointed to by the link register (x30) If we are switching to some task for the first time, this will be ret_from_fork function.
+```
+.globl cpu_switch_to
+cpu_switch_to:
+    mov    x10, #THREAD_CPU_CONTEXT
+    add    x8, x0, x10
+    mov    x9, sp
+    stp    x19, x20, [x8], #16        // store callee-saved registers
+    stp    x21, x22, [x8], #16
+    stp    x23, x24, [x8], #16
+    stp    x25, x26, [x8], #16
+    stp    x27, x28, [x8], #16
+    stp    x29, x9, [x8], #16
+    str    x30, [x8]
+    add    x8, x1, x10
+    ldp    x19, x20, [x8], #16        // restore callee-saved registers
+    ldp    x21, x22, [x8], #16
+    ldp    x23, x24, [x8], #16
+    ldp    x25, x26, [x8], #16
+    ldp    x27, x28, [x8], #16
+    ldp    x29, x9, [x8], #16
+    ldr    x30, [x8]
+    mov    sp, x9
+    ret
+```
+
+#### Result
+
+```
+void process(char *array)
+{
+    while (1) {
+        for (int i = 0; i < 5; i++) {
+            uart_send(array[i]);
+            delay(100000);
+        }
+    }
+}
+
+void kernel_main(void)
+{
+    uart_init();
+    init_printf(0, putc);
+    ...
+    int res = copy_process((unsigned long)&process, (unsigned long)"12345");
+    ...
+    res = copy_process((unsigned long)&process, (unsigned long)"abcde");
+    ...
+    while (1) {
+        schedule();
+    }
+}
+```
+
+![L4 Result](https://github.com/tingggggg/OSDIg/blob/main/images/l4/l4_result.png)
