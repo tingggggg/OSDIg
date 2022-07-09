@@ -376,4 +376,17 @@ void kernel_main(void)
 
 ## L5 UserProcesses SystemCalls
 
-WIP
+There is still a major drawback in this functionality: there is no process isolation at all.
+First of all, we will move all user processes to EL0, which restricts their access to privileged processor operations. 
+Then add a set of system calls to the RPi OS.
+
+#### System calls implementation
+
+The main idea behind system calls (syscalls for short) is very simple: each system call is actually a synchronous exception. If a user program need to execute a syscall, it first has to to prepare all necessary arguments, and then run `svc` instruction. 
+
+Defines 4 simple syscalls:
+
+1. `write` This syscall outputs something on the screen using UART device.
+2. `clone` This syscall creates a new user thread. The location of the stack for the newly created thread is passed as the first argument.
+3. `malloc` This system call allocates a memory page for a user process.
+4. `exit` Each process must call this syscall after it finishes execution.
