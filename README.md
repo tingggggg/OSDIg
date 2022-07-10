@@ -1,17 +1,21 @@
 # OSDIg
 
 * [L1 Kernel Initialization](https://github.com/tingggggg/OSDIg#l1-kernel-initializationmini-uart--gpio)
-WIP
+
+Mini UART initialization & Sending data using the Mini UART.
 
 * [L2 Processor Initialization](https://github.com/tingggggg/OSDIg#l2-processor-initialization)
-WIP
+
+We are going to work more closely with the ARM processor. It has some essential features that can be utilized by the OS. The first such feature is called "Exception levels"
 
 * [L3 Interrupt Handling](https://github.com/tingggggg/OSDIg#l3-interrupt-handling)
-WIP
+
+We already know how to communicate with hardware. However, most of the time the pattern of communication is not that simple. Usually, this pattern is asynchronous: we send some command to a device, but it doesn't respond immediately. Instead, it notifies us when the work is completed. Such asynchronous notifications are called "interrupts" because they interrupt normal execution flow and force the processor to execute an "interrupt handler".
+There is one device that is particularly useful in operating system development: system timer. It is a device that can be configured to periodically interrupt a processor with some predefined frequency.
 
 * [L4 Processor Scheduler](https://github.com/tingggggg/OSDIg#l4-processor-scheduler)
 
-We still can't call this project an operating system. The reason is that it can't do any of the core tasks that any OS should do. One of such core tasks is called process scheduling. By scheduling I mean that an operating system should be able to share CPU time between different processes. The hard part of it is that a process should be unaware of the scheduling happening: it should view itself as the only one occupying the CPU. In this lesson
+We still can't call this project an operating system. The reason is that it can't do any of the core tasks that any OS should do. One of such core tasks is called process scheduling. By scheduling I mean that an operating system should be able to share CPU time between different processes. The hard part of it is that a process should be unaware of the scheduling happening: it should view itself as the only one occupying the CPU.
 
 * [L5 UserProcesses SystemCalls](https://github.com/tingggggg/OSDIg#l5-userprocesses-systemcalls)
 
