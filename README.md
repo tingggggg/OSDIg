@@ -382,7 +382,7 @@ Then add a set of system calls to the RPi OS.
 
 #### System calls implementation
 
-The main idea behind system calls (syscalls for short) is very simple: each system call is actually a synchronous exception. If a user program need to execute a syscall, it first has to to prepare all necessary arguments, and then run `svc` instruction. 
+The main idea behind system calls is very simple: each system call is actually a synchronous exception. If a user program need to execute a syscall, it first has to to prepare all necessary arguments, and then run `svc` instruction. 
 
 Defines 4 simple syscalls:
 
@@ -390,3 +390,21 @@ Defines 4 simple syscalls:
 2. `clone` This syscall creates a new user thread. The location of the stack for the newly created thread is passed as the first argument.
 3. `malloc` This system call allocates a memory page for a user process.
 4. `exit` Each process must call this syscall after it finishes execution.
+
+Use write syscall as an example and take a look at the syscall wrapper function.
+The function is very simple: it just stores syscall number in the w8 register and generates a synchronous exception by executing svc instruction. 
+```
+.globl call_sys_write
+call_sys_write:
+    mov w8, #SYS_WRITE_NUMBER    
+    svc #0
+    ret
+```
+```
+void sys_write(char *buf) 
+{
+    printf(buf);
+}
+...
+void * const sys_call_table[] = {sys_write, sys_malloc, sys_clone, sys_exit};
+```
