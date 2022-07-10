@@ -408,3 +408,166 @@ void sys_write(char *buf)
 ...
 void * const sys_call_table[] = {sys_write, sys_malloc, sys_clone, sys_exit};
 ```
+
+#### Handling  synchronous exceptions
+
+After a synchronous exception is generated, the handler, which is registered in the exception table, is called. The handler starts with the following code.
+First of all, as for all exception handlers, `kernel_entry` macro is called. Then `esr_el1` (Exception Syndrome Register) is checked. 
+This register contains "exception class" field at offset `ESR_ELx_EC_SHIFT`. If exception class is equal to `ESR_ELx_EC_SVC64` this means that the current exception is caused by the svc instruction and it is a system call. In this case, we jump to `el0_svc` label and show an error message otherwise.
+
+```
+el0_sync:
+    kernel_entry 0
+    mrs    x25, esr_el1                // read the syndrome register
+    lsr    x24, x25, #ESR_ELx_EC_SHIFT        // exception class
+    cmp    x24, #ESR_ELx_EC_SVC64            // SVC in 64-bit state
+    b.eq    el0_svc
+    handle_invalid_entry 0, SYNC_ERROR
+```
+
+#### Moving a task to user mode
+
+Before any syscall can take place, we obviously need to have a task running in user mode.
+The function that actually does the job is called `move_to_user_mode`.
+
+Right now we are in the middle of execution of a kernel thread that was created by forking from the init task.
+
+We've seen that a small area (`pt_regs` area) was reserved at the top of the stack of the newly created task.
+This is the first time we are going to use this area: we will save manually prepared processor state there. This state will have exactly the same format as `kernel_exit` macro expects and its structure is described by the `pt_regs` struct.
+```
+int move_to_user_mode(unsigned long pc)
+{
+    struct pt_regs *regs = task_pt_regs(current);
+    memzero((unsigned long)regs, sizeof(*regs));
+    regs->pc = pc;
+    regs->pstate = PSR_MODE_EL0t;
+    unsigned long stack = get_free_page(); //allocate new user stack
+    if (!stack) {
+        return -1;
+    }
+    regs->sp = stack + PAGE_SIZE;
+    current->stack = stack;
+    return 0;
+}
+```
+The following fields of the `pt_regst` struct are initialized in the `move_to_user_mode` function.
+
+* `pc` It now points to the function that needs to be executed in the user mode. `kernel_exit` will copy pc to the `elr_el1` register, thus making sure that we will return to the pc address after performing exception return.
+* `pstate` This field will be copied to `spsr_el1` by the `kernel_exit` and becomes the processor state after exception return is completed. `PSR_MODE_EL0t` constant, which is copied to the `pstate` field, is prepared in such a way that exception return will be made to EL0 level.
+* `stack` `move_to_user_mode` allocates a new page for the user stack and sets `sp` field to point to the top of this page.
+
+`task_pt_regs` function is used to calculate the location of the `pt_regs` area.
+```
+struct pt_regs * task_pt_regs(struct task_struct *tsk)
+{
+    unsigned long p = (unsigned long)tsk + THREAD_SIZE - sizeof(struct pt_regs);
+    return (struct pt_regs *)p;
+}
+```
+
+#### Forking user processer
+
+`user_process` function will be executed in the user mode. This function calls clone system call 2 times in order to execute user_process1 function in 2 parallel threads.
+`clone` syscall wrapping function looks like. 
+
+This function does the following.
+* Saves registers `x0` - `x3`, those registers contain parameters of the syscall and later will be overwritten by the syscall handler.
+* Calls syscall handler.
+* Check return value of the syscall handler: if it is `0` this means that we return here right after the syscall finishes and we are executing inside the original thread - just return to the caller in this case.
+* If the return value is non-zero, then it is PID of the new task and we are executing inside of the newly created thread. In this case, execution goes to `thread_start` label.
+* The function, originally passed as the first argument, is called in a new thread.
+* After the function finishes, `exit` syscall is performed - it never returns.
+```
+.globl call_sys_clone
+call_sys_clone:
+    /* Save args for the child.  */
+    mov    x10, x0                    /*fn*/
+    mov    x11, x1                    /*arg*/
+    mov    x12, x2                    /*stack*/
+
+    /* Do the system call.  */
+    mov     x0, x2                    /* stack  */
+    mov    x8, #SYS_CLONE_NUMBER
+    svc    0x0
+
+    cmp    x0, #0
+    beq    thread_start
+    ret
+
+thread_start:
+    mov    x29, 0
+
+    /* Pick the function arg and execute.  */
+    mov    x0, x11
+    blr    x10
+
+    /* We are done, pass the return value through x0.  */
+    mov    x8, #SYS_EXIT_NUMBER
+    svc    0x0
+```
+
+`copy_cprocess` function supports cloning user threads as well as kernel threads.
+
+In case, when we are creating a new kernel thread, the function behaves exactly the same, as was described in the previous lesson. 
+In the other case, when we are cloning a user thread, this part of the code is executed.
+```
+int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg, unsigned long stack)
+{
+    ...
+    if (clone_flags & PF_KTHREAD) {
+        ...
+    } else {
+        struct pt_regs * cur_regs = task_pt_regs(current);
+        *cur_regs = *childregs;
+        childregs->regs[0] = 0;
+        childregs->sp = stack + PAGE_SIZE; 
+        p->stack = stack;
+    }
+    ...
+    return pid;
+}
+```
+
+The current processor state is copied to the new task's state. `x0` in the new state is set to `0`, because `x0` will be interpreted by the caller as a return value of the syscall. We've just seen how clone wrapper function uses this value to determine whether we are still executing as a part of the original thread or a new one.
+
+Next `sp` for the new task is set to point to the top of the new user stack page. We also save the pointer to the stack page in order to do a cleanup after the task finishes.
+
+#### Result
+```
+void user_process()
+{
+    ...
+    unsigned long stack = call_sys_malloc();
+    ...
+
+    // call "call_sys_clone" in sys.S
+    int err = call_sys_clone((unsigned long)&user_process1, (unsigned long)"123456", stack);
+    ...
+
+    stack = call_sys_malloc();
+	...
+	err = call_sys_clone((unsigned long)&user_process1, (unsigned long)"abcd", stack);
+	...
+	call_sys_exit();
+}
+
+void kernel_process()
+{
+    printf("Kernel process started. EL %d\r\n", get_el());
+    int err = move_to_user_mode((unsigned long)&user_process);
+    ...
+}
+
+void kernel_main(void)
+{
+    ...
+    int res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0, 0);
+    if (res < 0) {
+        printf("Error while starting kernel process\r\n");
+        return; 
+    }
+    ...
+}
+```
+
+![L5 Result](https://github.com/tingggggg/OSDIg/blob/main/images/l5/l5_result.png)
