@@ -1,5 +1,5 @@
 #include "mm.h"
-#include "mmu.h"
+#include "arm/mmu.h"
 
 static unsigned short mem_map[PAGING_PAGES] = {0, };
 

@@ -194,7 +194,7 @@ el0_da:
 	handle_invalid_entry 0, DATA_ABORT_ERROR
 1:
 	bl disable_irq
-	kernel_exit
+	kernel_exit 0 
 
 .globl ret_from_fork
 ret_from_fork:

@@ -45,7 +45,7 @@ void _schedule(void)
             }
         }
     }
-    switch_to(task[next], next);
+    switch_to(task[next]);
     preempt_enable();
 }
 
@@ -55,7 +55,7 @@ void schedule(void)
     _schedule();
 }
 
-void switch_to(struct task_struct *next, int index)
+void switch_to(struct task_struct *next)
 {
     if (current == next)
         return;
