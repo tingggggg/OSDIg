@@ -22,6 +22,8 @@ There is still a major drawback in this functionality: there is no process isola
 First of all, we will move all user processes to EL0, which restricts their access to privileged processor operations. 
 Then add a set of system calls to the RPi OS.
 
+* [L6 Virtual Memory Management](https://github.com/tingggggg/OSDIg#l5-userprocesses-systemcalls)
+
 *****
 
 ## L1 Kernel Initialization(mini uart & GPIO)
@@ -587,3 +589,171 @@ void kernel_main(void)
 ```
 
 ![L5 Result](https://github.com/tingggggg/OSDIg/blob/main/images/l5/l5_result.png)
+
+## L6 Virtual Memory Management
+
+...
+...
+
+#### Allocating user porcesses
+
+The end up implementing is to store the user program in a separate section of the kernel image. 
+
+Define `user_begin` and `user_end` variables, which mark the beginning and end of this region. In this way we can simply copy everything between `user_begin` and `user_end` to the newly allocated process address space, thus simulating loading a user program.
+
+```
+    . = ALIGN(0x00001000);
+    user_begin = .;
+    .text.user : { build/user* (.text) }
+    .rodata.user : { build/user* (.rodata) }
+    .data.user : { build/user* (.data) }
+    .bss.user : { build/user* (.bss) }
+    user_end = .;
+```
+
+#### Creating first user process
+`move_to_user_mode` function is responsible for creating the first user process. We call this function from a kernel thread.
+
+```
+    ...
+    unsigned long begin = (unsigned long)&user_begin;
+    unsigned long end = (unsigned long)&user_end;
+    unsigned long process = (unsigned long)&user_process;
+    int err = move_to_user_mode(begin, end - begin, process - begin);
+    ...
+```
+
+* `pc` now points to the offset of the startup function in the user region.
+* `allocate_user_page` reserves 1 memory page and maps it to the virtual address, provided as a second argument. In the process of mapping it populates page tables, associated with the current process.
+* `memcpy` copy the whole user region to the page(VA) that we have just mapped.
+* `set_pgd` 
+
+```
+    int move_to_user_mode(unsigned long start, unsigned long size, unsigned long pc)
+    {
+        struct pt_regs *regs = task_pt_regs(current);
+        regs->pstate = PSR_MODE_EL0t;
+        regs->pc = pc;
+        regs->sp = 2 *  PAGE_SIZE;
+        unsigned long code_page = allocate_user_page(current, 0);
+        if (code_page == 0)    {
+            return -1;
+        }
+        memcpy(code_page, start, size);
+        set_pgd(current->mm.pgd);
+        return 0;
+    }
+```
+
+#### Mapping a virtual page
+
+`allocate_user_page` function allocates a new page, maps it to the provided virtual address and returns a pointer to the page.
+
+```
+unsigned long allocate_user_page(struct task_struct *task, unsigned long va) {
+    unsigned long page = get_free_page();
+    if (page == 0) {
+        return 0;
+    }
+    map_page(task, va, page);
+    return page + VA_START;
+}
+```
+
+`map_page` in some way duplicates what we've been doing in the `__create_page_tables` function: it allocates and populates a page table hierarchy.
+`map_page` is responsible for one more important role: it keeps track of the pages that have been allocated during the process of virtuall address mapping.
+```
+void map_page(struct task_struct *task, unsigned long va, unsigned long page){
+    unsigned long pgd;
+    if (!task->mm.pgd) {
+        task->mm.pgd = get_free_page();
+        task->mm.kernel_pages[++task->mm.kernel_pages_count] = task->mm.pgd;
+    }
+    pgd = task->mm.pgd;
+    int new_table;
+    unsigned long pud = map_table((unsigned long *)(pgd + VA_START), PGD_SHIFT, va, &new_table);
+    if (new_table) {
+        task->mm.kernel_pages[++task->mm.kernel_pages_count] = pud;
+    }
+    unsigned long pmd = map_table((unsigned long *)(pud + VA_START) , PUD_SHIFT, va, &new_table);
+    if (new_table) {
+        task->mm.kernel_pages[++task->mm.kernel_pages_count] = pmd;
+    }
+    unsigned long pte = map_table((unsigned long *)(pmd + VA_START), PMD_SHIFT, va, &new_table);
+    if (new_table) {
+        task->mm.kernel_pages[++task->mm.kernel_pages_count] = pte;
+    }
+    map_table_entry((unsigned long *)(pte + VA_START), va, page);
+    struct user_page p = {page, va};
+    task->mm.user_pages[task->mm.user_pages_count++] = p;
+}
+```
+
+`map_table` function as an analog of the create_table_entry macro. It extracts table index from the virtual address and prepares a descriptor in the parent table that points to the child table.
+
+`map_table_entry` extracts PTE index from the virtual address and then prepares and sets PTE descriptor. It is similar to what we've been doing in the create_block_map macro.
+```
+unsigned long map_table(unsigned long *table, unsigned long shift, unsigned long va, int* new_table) {
+    unsigned long index = va >> shift;
+    index = index & (PTRS_PER_TABLE - 1);
+    if (!table[index]){
+        *new_table = 1;
+        unsigned long next_level_table = get_free_page();
+        unsigned long entry = next_level_table | MM_TYPE_PAGE_TABLE;
+        table[index] = entry;
+        return next_level_table;
+    } else {
+        *new_table = 0;
+    }
+    return table[index] & PAGE_MASK;
+}
+
+void map_table_entry(unsigned long *pte, unsigned long va, unsigned long pa) {
+    unsigned long index = va >> PAGE_SHIFT;
+    index = index & (PTRS_PER_TABLE - 1);
+    unsigned long entry = pa | MMU_PTE_FLAGS;
+    pte[index] = entry;
+}
+```
+
+#### Forking a process
+
+`fork` system call is implemented. copy_process function does most of the job.
+
+```
+int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg)
+{
+    preempt_disable();
+    struct task_struct *p;
+
+    unsigned long page = allocate_kernel_page();
+    p = (struct task_struct *) page;
+    struct pt_regs *childregs = task_pt_regs(p);
+
+    if (!p)
+        return -1;
+
+    if (clone_flags & PF_KTHREAD) {
+        p->cpu_context.x19 = fn;
+        p->cpu_context.x20 = arg;
+    } else {
+        struct pt_regs * cur_regs = task_pt_regs(current);
+        *cur_regs = *childregs;
+        childregs->regs[0] = 0;
+        copy_virt_memory(p);
+    }
+    p->flags = clone_flags;
+    p->priority = current->priority;
+    p->state = TASK_RUNNING;
+    p->counter = p->priority;
+    p->preempt_count = 1; //disable preemtion untill schedule_tail
+
+    p->cpu_context.pc = (unsigned long)ret_from_fork;
+    p->cpu_context.sp = (unsigned long)childregs;
+    int pid = nr_tasks++;
+    task[pid] = p;    
+
+    preempt_enable();
+    return pid;
+}
+```
