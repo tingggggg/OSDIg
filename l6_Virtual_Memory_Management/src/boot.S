@@ -64,6 +64,10 @@ el1_entry:
     create_table_entry \tbl, \virt, PUD_SHIFT, \tmp1, \tmp2
     .endm
 
+    /* "create_table_entry" responsible for allocating a new page table (In our case either PGD or PUD)
+        tbl - a pointer to a memory region were new table has to be allocated.
+        virt - virtual address that we are currently mapping.
+        shift - shift that we need to apply to the virtual address in order to extract current table index. (39 in case of PGD and 30 in case of PUD) */
     .macro create_table_entry, tbl, virt, shift, tmp1, tmp2
     lsr \tmp1, \virt, #\shift
     and \tmp1, \tmp1, #PTRS_PER_TABLE - 1
@@ -91,6 +95,7 @@ el1_entry:
 __create_page_tables:
     mov x29, x30 // save return address
 
+    /* Init page space clean */
     adrp x0, pg_dir
     mov x1, #PG_DIR_SIZE
     bl memzero

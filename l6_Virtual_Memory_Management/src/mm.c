@@ -14,7 +14,7 @@ unsigned long allocate_kernel_page()
 
 unsigned long allocate_user_page(struct task_struct *task, unsigned long va) 
 {
-    unsigned long page = get_free_page();
+    unsigned long page = get_free_page(); // PA 
     if (page == 0) {
         return 0;
     }
