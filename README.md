@@ -592,8 +592,31 @@ void kernel_main(void)
 
 ## L6 Virtual Memory Management
 
-...
-...
+#### Translation process
+Virtual memory provides each process with an abstraction that makes it think that it occupies all available memory.
+Each time a process needs to access some memory location it uses virtual address, which is translated into a physical address.
+```
+                           Virtual address                                                                 Physical Memory
++-----------------------------------------------------------------------+                                +-----------------_+
+|         | PGD Index | PUD Index | PMD Index | PTE Index | Page offset |                                |                  |
++-----------------------------------------------------------------------+                                |                  |
+63        47     |    38      |   29     |    20    |     11      |     0                                |     Page N       |
+                 |            |          |          |             +--------------------+           +---->+------------------+
+                 |            |          |          +---------------------+            |           |     |                  |
+          +------+            |          |                                |            |           |     |                  |
+          |                   |          +----------+                     |            |           |     |------------------|
++------+  |        PGD        |                     |                     |            +---------------->| Physical address |
+| ttbr |---->+-------------+  |           PUD       |                     |                        |     |------------------|
++------+  |  |             |  | +->+-------------+  |          PMD        |                        |     |                  |
+          |  +-------------+  | |  |             |  | +->+-------------+  |          PTE           |     +------------------+
+          +->| PUD address |----+  +-------------+  | |  |             |  | +->+--------------+    |     |                  |
+             +-------------+  +--->| PMD address |----+  +-------------+  | |  |              |    |     |                  |
+             |             |       +-------------+  +--->| PTE address |----+  +-------------_+    |     |                  |
+             +-------------+       |             |       +-------------+  +--->| Page address |----+     |                  |
+                                   +-------------+       |             |       +--------------+          |                  |
+                                                         +-------------+       |              |          |                  |
+                                                                               +--------------+          +------------------+
+```
 
 #### Allocating user porcesses
 
@@ -755,5 +778,21 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg)
 
     preempt_enable();
     return pid;
+}
+```
+
+Ｃopying user processes by function `copy_virt_memory`.
+For each page, allocate another empty page and copy the original page content there. We also map the new page using the same virtual address, that is used by the original one.
+```
+int copy_virt_memory(struct task_struct *dst) {
+    struct task_struct* src = current;
+    for (int i = 0; i < src->mm.user_pages_count; i++) {
+        unsigned long kernel_va = allocate_user_page(dst, src->mm.user_pages[i].virt_addr);
+        if( kernel_va == 0) {
+            return -1;
+        }
+        memcpy(src->mm.user_pages[i].virt_addr, kernel_va, PAGE_SIZE);
+    }
+    return 0;
 }
 ```
