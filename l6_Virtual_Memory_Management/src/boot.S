@@ -87,7 +87,7 @@ el1_entry:
     orr \phys, \tmp1, \phys, lsl #SECTION_SHIFT
 9999:   str \phys, [\tbl, \start, lsl #3]
     add \start, \start, #1
-    add \phys, \phys, #SECTION_SHIFT
+    add \phys, \phys, #SECTION_SIZE
     cmp \start, \end
     b.ls 9999b
     .endm
@@ -107,13 +107,13 @@ __create_page_tables:
     /* Mapping kernel and init stack */
     mov x1, xzr // start mapping from physical offset 0
     mov x2, #VA_START // first virtual address
-    ldr x3, =(VA_START + DEVICE_BASE - SECTION_SHIFT) // last virtual address
+    ldr x3, =(VA_START + DEVICE_BASE - SECTION_SIZE) // last virtual address
     create_block_map x0, x1, x2, x3, MMU_FLAGS, x4
 
     /* Mapping device memory */
     mov x1, #DEVICE_BASE // start mapping from device base address
     ldr x2, =(VA_START + DEVICE_BASE) // first virtual address
-    ldr x3, =(VA_START + PHYS_MEMORY_SIZE - SECTION_SHIFT) // last virtual address
+    ldr x3, =(VA_START + PHYS_MEMORY_SIZE - SECTION_SIZE) // last virtual address
     create_block_map x0, x1, x2, x3, MMU_DEVICE_FLAGS, x4
 
     mov x30, x29 // restore return address
