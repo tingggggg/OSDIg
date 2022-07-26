@@ -23,8 +23,10 @@ First of all, we will move all user processes to EL0, which restricts their acce
 Then add a set of system calls to the RPi OS.
 
 * [L6 Virtual Memory Management](https://github.com/tingggggg/OSDIg#l6-virtual-memory-management)
+
 The RPi OS now can run and schedule user processes, but the isolation between them is not complete - all processes and the kernel itself share the same memory.
 Fix all issues mentioned above by virtual memory.
+
 *****
 
 ## L1 Kernel Initialization(mini uart & GPIO)
