@@ -784,7 +784,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg)
 }
 ```
 
-Ｃopying user processes by function `copy_virt_memory`.
+Copying user processes by function `copy_virt_memory`.
 For each page, allocate another empty page and copy the original page content there. We also map the new page using the same virtual address, that is used by the original one.
 ```
 int copy_virt_memory(struct task_struct *dst) {
@@ -799,3 +799,31 @@ int copy_virt_memory(struct task_struct *dst) {
     return 0;
 }
 ```
+
+#### Result
+
+```
+void kernel_process()
+{
+    printf("Kernel process started. EL %d\r\n", get_el());
+    unsigned long begin = (unsigned long)&user_begin;
+    unsigned long end = (unsigned long)&user_end;
+    unsigned long process = (unsigned long)&user_process;
+    int err = move_to_user_mode(begin, end - begin, process - begin);
+    if (err < 0) {
+        printf("Error while moving process to user mode\r\n");
+    }
+}
+
+void kernel_main(void)
+{
+    ...
+    int res = copy_process(PF_KTHREAD, (unsigned long)&kernel_process, 0);
+    ...
+    while (1) {
+        schedule();
+    }
+}
+```
+
+![L6 Result](https://github.com/tingggggg/OSDIg/blob/main/images/l6/l6_result.png)
