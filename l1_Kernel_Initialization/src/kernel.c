@@ -1,8 +1,8 @@
-#include "mini_uart.h"
+#include "pl011_uart.h"
 
 void kernel_main(void)
 {
-    uart_init(115200);
+    uart_init();
     uart_send_string("Hello, Paspberry 3B+\r\n");
 
     while (1) {
