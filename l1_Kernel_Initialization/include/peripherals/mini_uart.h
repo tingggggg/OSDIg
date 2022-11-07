@@ -16,4 +16,7 @@
 #define AUX_MU_STAT_REG (PBASE+0x00215064)
 #define AUX_MU_BAUD_REG (PBASE+0x00215068)
 
+#define SYSTEM_CLOCK_FREQ 250000000 // 250 MHz
+#define BAUD_RATE_REG(target_baudrate) ((SYSTEM_CLOCK_FREQ / target_baudrate / 8) - 1)
+
 #endif  /*_P_MINI_UART_H */
