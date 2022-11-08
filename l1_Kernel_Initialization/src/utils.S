@@ -14,3 +14,8 @@ delay:
     bne delay
     ret
     
+.global proc_id
+proc_id:
+    mrs x0, mpidr_el1
+    and x0, x0, #0xFF // check processor id
+    ret
