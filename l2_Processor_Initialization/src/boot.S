@@ -18,14 +18,21 @@ master:
     ldr x0, =SCTLR2_VALUE_MMU_DISABLED
     msr sctlr_el2, x0
 
+    ldr x0, =HCR_VALUE
+    msr hcr_el2, x0
+
     ldr x0, =SCR_VALUE
     msr scr_el3, x0
 
     ldr x0, =SPSR3_VALUE
     msr spsr_el3, x0
 
+    ldr x0, =CPTR_VALUE
+    msr cptr_el2, x0
+
     adr x0, el2_entry
     msr elr_el3, x0
+    
     eret
 
 el2_entry:
@@ -41,11 +48,11 @@ el2_entry:
     ldr x0, =SCTLR1_VALUE_MMU_DISABLED
     msr sctlr_el1, x0
 
-    ldr x0, =HCR_VALUE
-    msr hcr_el2, x0
-
     ldr x0, =SPSR2_VALUE
     msr spsr_el2, x0
+
+    ldr x0, =CPACR_VALUE
+	msr cpacr_el1, x0
 
     adr x0, el1_entry
     msr elr_el2, x0

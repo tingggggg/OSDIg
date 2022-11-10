@@ -33,8 +33,9 @@
 // HCR_EL2, Hypervisor Configuration Register (EL2), Page 2487 of AArch64-Reference-Manual.
 // ***************************************
 
+#define HCR_E2H             (1 << 34)
 #define HCR_RW	    		(1 << 31)
-#define HCR_VALUE			HCR_RW
+#define HCR_VALUE			(HCR_E2H | HCR_RW)
 
 // ***************************************
 // SCR_EL3, Secure Configuration Register (EL3), Page 2648 of AArch64-Reference-Manual.
@@ -60,5 +61,19 @@
 #define SPSR2_MASK_ALL      (7 << 6)
 #define SPSR2_EL1h          (5 << 0)
 #define SPSR2_VALUE         (SPSR2_MASK_ALL | SPSR2_EL1h)
+
+// ***************************************
+// CPACR_EL1, Architectural Feature Access Control Register (EL1) Page 2411 of AArch64-Reference-Manual.
+// ***************************************
+
+#define CPACR_FPEN          (3 << 20)
+#define CPACR_VALUE         (CPACR_FPEN)
+
+// ***************************************
+// CPTR_EL2, Architectural Feature Trap Register (EL2) Page 2414 of AArch64-Reference-Manual.
+// ***************************************
+
+#define CPTR_FPEN           (3 << 20)
+#define CPTR_VALUE          (CPTR_FPEN)
 
 #endif
