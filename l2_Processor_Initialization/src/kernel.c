@@ -4,15 +4,23 @@
 
 void kernel_main(void)
 {
-    uart_init();
+    int el = get_el();
+
+    // UART init in EL2 only
+    if (el == 2) {
+        uart_init();
+    }
+
     init_printf(0, putc);
 
     printf("Hello, Paspberry 3B+\r\n");
+    printf("\tException level: %d\r\n", el);
 
-    int el = get_el();
-    printf("Exception level: %d\r\n", el);
-
-    while (1) {
-        uart_send(uart_recv());
+    // Echo in EL1 only.
+    if (el == 1) {
+        while (1) {
+            uart_send(uart_recv());
+        }
     }
+    
 }

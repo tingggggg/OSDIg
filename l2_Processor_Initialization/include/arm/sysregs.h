@@ -5,15 +5,29 @@
 // SCTLR_EL1, System Control Register (EL1), Page 2654 of AArch64-Reference-Manual.
 // ***************************************
 
-#define SCTLR_RESERVED                  (3 << 28) | (3 << 22) | (1 << 20) | (1 << 11)
-#define SCTLR_EE_LITTLE_ENDIAN          (0 << 25)
-#define SCTLR_EOE_LITTLE_ENDIAN         (0 << 24)
-#define SCTLR_I_CACHE_DISABLED          (0 << 12)
-#define SCTLR_D_CACHE_DISABLED          (0 << 2)
-#define SCTLR_MMU_DISABLED              (0 << 0)
-#define SCTLR_MMU_ENABLED               (1 << 0)
+#define SCTLR1_RESERVED                  (3 << 28) | (3 << 22) | (1 << 20) | (1 << 11)
+#define SCTLR1_EE_LITTLE_ENDIAN          (0 << 25)
+#define SCTLR1_EOE_LITTLE_ENDIAN         (0 << 24)
+#define SCTLR1_I_CACHE_DISABLED          (0 << 12)
+#define SCTLR1_D_CACHE_DISABLED          (0 << 2)
+#define SCTLR1_MMU_DISABLED              (0 << 0)
+#define SCTLR1_MMU_ENABLED               (1 << 0)
 
-#define SCTLR_VALUE_MMU_DISABLED	(SCTLR_RESERVED | SCTLR_EE_LITTLE_ENDIAN | SCTLR_I_CACHE_DISABLED | SCTLR_D_CACHE_DISABLED | SCTLR_MMU_DISABLED)
+#define SCTLR1_VALUE_MMU_DISABLED	(SCTLR1_RESERVED | SCTLR1_EE_LITTLE_ENDIAN | SCTLR1_I_CACHE_DISABLED | SCTLR1_D_CACHE_DISABLED | SCTLR1_MMU_DISABLED)
+
+// ***************************************
+// SCTLR_EL2, System Control Register (EL2), Page 2665 of AArch64-Reference-Manual.
+// ***************************************
+
+#define SCTLR2_RESERVED                  (3 << 28) | (3 << 22) | (1 << 20) | (1 << 11)
+#define SCTLR2_EE_LITTLE_ENDIAN          (0 << 25)
+// #define SCTLR2_EOE_LITTLE_ENDIAN         (0 << 24) // not actually used
+#define SCTLR2_I_CACHE_DISABLED          (0 << 12)
+#define SCTLR2_D_CACHE_DISABLED          (0 << 2)
+#define SCTLR2_MMU_DISABLED              (0 << 0)
+// #define SCTLR2_MMU_ENABLED               (1 << 0) // not actuall used
+
+#define SCTLR2_VALUE_MMU_DISABLED	(SCTLR2_RESERVED | SCTLR2_EE_LITTLE_ENDIAN | SCTLR2_I_CACHE_DISABLED | SCTLR2_D_CACHE_DISABLED | SCTLR2_MMU_DISABLED)
 
 // ***************************************
 // HCR_EL2, Hypervisor Configuration Register (EL2), Page 2487 of AArch64-Reference-Manual.
@@ -35,8 +49,16 @@
 // SPSR_EL3, Saved Program Status Register (EL3) Page 389 of AArch64-Reference-Manual.
 // ***************************************
 
-#define SPSR_MASK_ALL 		(7 << 6) // change EL to EL1
-#define SPSR_EL1h			(5 << 0) // EL1h mode means that we are using EL1 dedicated stack pointer
-#define SPSR_VALUE			(SPSR_MASK_ALL | SPSR_EL1h)
+#define SPSR3_MASK_ALL 		(7 << 6) // change EL to EL2
+#define SPSR3_EL2h			(9 << 0) // EL2h mode means that we are using EL2 dedicated stack pointer
+#define SPSR3_VALUE			(SPSR3_MASK_ALL | SPSR3_EL2h)
+
+// ***************************************
+// SPSR_EL2, Saved Program Status Register (EL2) Page 383 of AArch64-Reference-Manual.
+// ***************************************
+
+#define SPSR2_MASK_ALL      (7 << 6)
+#define SPSR2_EL1h          (5 << 0)
+#define SPSR2_VALUE         (SPSR2_MASK_ALL | SPSR2_EL1h)
 
 #endif
