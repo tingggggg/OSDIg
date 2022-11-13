@@ -21,4 +21,6 @@
 
 #define ARM_TIMER_IRQ   (1 << 0)
 
+#define AUX_IRQ (1 << 29)
+
 #endif  /*_P_IRQ_H */

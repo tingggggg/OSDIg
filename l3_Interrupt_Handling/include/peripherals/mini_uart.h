@@ -16,4 +16,10 @@
 #define AUX_MU_STAT_REG (PBASE+0x00215064)
 #define AUX_MU_BAUD_REG (PBASE+0x00215068)
 
+#define MU_IER_RXEN (1 << 0)
+#define MU_IER_TXEN (1 << 1)
+
+#define MU_IIR_RX_READY (2 << 1)
+#define MU_IIR_RX_CLR   (1 << 1)
+
 #endif  /*_P_MINI_UART_H */
