@@ -12,7 +12,8 @@ void kernel_main(void)
     printf("Hello, Paspberry 3B+\r\n");
 
     irq_vector_init();
-    timer_init();
+    // timer_init();
+    arm_timer_init();
     enable_interrupt_controller();
     enable_irq();
 

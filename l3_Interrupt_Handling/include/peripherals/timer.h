@@ -16,4 +16,17 @@
 #define TIMER_CS_M2	(1 << 2)
 #define TIMER_CS_M3	(1 << 3)
 
+// Reference: 14.2 Timer Registers
+// https://web.stanford.edu/class/cs140e/docs/BCM2837-ARM-Peripherals.pdf
+
+#define ARM_TIMER_BASE  (PBASE + 0xB000)
+#define ARM_TIMER_LOAD  (ARM_TIMER_BASE + 0x400)
+#define ARM_TIMER_VALUE (ARM_TIMER_BASE + 0x404)
+#define ARM_TIMER_CTRL  (ARM_TIMER_BASE + 0x408)
+#define ARM_TIMER_CLR   (ARM_TIMER_BASE + 0x40c)
+
+#define CTRL_32BIT (1 << 1) // 32-bit counter
+#define CTRL_INT_ENABLE (1 << 5) // Timer interrupt enabled
+#define CTRL_ENABLE (1 << 7) // Timer enabled
+
 #endif  /*_P_TIMER_H */
