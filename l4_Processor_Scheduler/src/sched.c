@@ -60,10 +60,10 @@ void _schedule(char *call_from)
             }
         }
     }
-    if (task[next] != current) {
-        printf("_schedule(%s) switch_to next task (pid=%x)\r\n", call_from, next);
-        print_debug_tasks();
-    }
+    // if (task[next] != current) {
+    //     printf("_schedule(%s) switch_to next task (pid=%x)\r\n", call_from, next);
+    //     print_debug_tasks();
+    // }
     switch_to(task[next]);
     preempt_enable();
 }
