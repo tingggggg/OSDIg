@@ -19,13 +19,18 @@ void preempt_enable(void)
 
 void print_debug_tasks(void) 
 {
-    printf("tasks:\r\n");
     struct task_struct *p;
+    printf("\n\r----------- Task switch -----------\r\n");
     for (int i = 0; i < NR_TASKS; i++) {
         p = task[i];
         if (!p)
             return;
-        printf("\tpid=%d, sp=0x%x\r\n", i, p->cpu_context.sp);
+
+        printf("\n\r\ttask[%d] counter = %d\n\r", i, p->counter);
+		printf("\ttask[%d] priority = %d\n\r", i, p->priority);
+		printf("\ttask[%d] preempt_count = %d\n\r", i, p->preempt_count);
+		printf("\ttask[%d] sp = 0x%08x\n\r", i, p->cpu_context.sp);
+        printf("\n\r------------------------------\r\n");
     }
 }
 
@@ -77,7 +82,6 @@ void switch_to(struct task_struct *next)
     current = next;
     cpu_switch_to(prev, next);
 }
-
 
 void schedule_tail(void) {
 	preempt_enable();

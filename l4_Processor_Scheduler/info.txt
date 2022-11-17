@@ -1,0 +1,111 @@
+----------- Task[1] created -----------
+
+Struct task allocated at 0x00400000.
+p->cpu_context.x19 = 0x00000800. (fn)
+p->cpu_context.x20 = 0x00002e78. (arg)
+p->cpu_context.pc  = 0x00002e08. (ret_from_fork)
+p->cpu_context.sp  = 0x00401000. (sp)
+
+----------- Task[2] created -----------
+
+Struct task allocated at 0x00401000.
+p->cpu_context.x19 = 0x00000800. (fn)
+p->cpu_context.x20 = 0x00002ea8. (arg)
+p->cpu_context.pc  = 0x00002e08. (ret_from_fork)
+p->cpu_context.sp  = 0x00402000. (sp)
+_schedule(kernel_main) switch_to next task (pid=1)
+
+----------- Task switch -----------
+
+        task[0] counter = 0
+        task[0] priority = 1
+        task[0] preempt_count = 1
+        task[0] sp = 0x00000000
+
+------------------------------
+
+        task[1] counter = 1
+        task[1] priority = 1
+        task[1] preempt_count = 1
+        task[1] sp = 0x00401000
+
+------------------------------
+
+        task[2] counter = 1
+        task[2] priority = 1
+        task[2] preempt_count = 1
+        task[2] sp = 0x00402000
+
+------------------------------
+_schedule(irq_handler) switch_to next task (pid=2)
+
+----------- Task switch -----------
+
+        task[0] counter = 0
+        task[0] priority = 1
+        task[0] preempt_count = 1
+        task[0] sp = 0x003fff50
+
+------------------------------
+
+        task[1] counter = 0
+        task[1] priority = 1
+        task[1] preempt_count = 1
+        task[1] sp = 0x00401000
+
+------------------------------
+
+        task[2] counter = 1
+        task[2] priority = 1
+        task[2] preempt_count = 1
+        task[2] sp = 0x00402000
+
+------------------------------
+_schedule(irq_handler) switch_to next task (pid=0)
+
+----------- Task switch -----------
+
+        task[0] counter = 1
+        task[0] priority = 1
+        task[0] preempt_count = 1
+        task[0] sp = 0x003fff50
+
+------------------------------
+
+        task[1] counter = 1
+        task[1] priority = 1
+        task[1] preempt_count = 1
+        task[1] sp = 0x00400e20
+
+------------------------------
+
+        task[2] counter = 1
+        task[2] priority = 1
+        task[2] preempt_count = 1
+        task[2] sp = 0x00402000
+
+------------------------------
+_schedule(kernel_main) switch_to next task (pid=1)
+
+----------- Task switch -----------
+
+        task[0] counter = 0
+        task[0] priority = 1
+        task[0] preempt_count = 1
+        task[0] sp = 0x003fff50
+
+------------------------------
+
+        task[1] counter = 1
+        task[1] priority = 1
+        task[1] preempt_count = 1
+        task[1] sp = 0x00400e20
+
+------------------------------
+
+        task[2] counter = 1
+        task[2] priority = 1
+        task[2] preempt_count = 1
+        task[2] sp = 0x00401e20
+
+------------------------------

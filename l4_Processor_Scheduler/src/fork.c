@@ -23,7 +23,14 @@ int copy_process(unsigned long fn, unsigned long arg)
     
     int pid = nr_tasks++;
     task[pid] = p;
-    printf("copy_process: pid=%d, sp=0x%x\r\n", pid, p->cpu_context.sp);
+    
+    printf("\n\r----------- Task[%d] created -----------\r\n", pid);
+	printf("\n\rStruct task allocated at 0x%08x.\r\n", p);
+	printf("p->cpu_context.x19 = 0x%08x. (fn)\r\n", p->cpu_context.x19);
+	printf("p->cpu_context.x20 = 0x%08x. (arg)\r\n", p->cpu_context.x20);
+	printf("p->cpu_context.pc  = 0x%08x. (ret_from_fork)\r\n", p->cpu_context.pc);
+	printf("p->cpu_context.sp  = 0x%08x. (sp)\r\n", p->cpu_context.sp);
+
     preempt_enable();
     return 0;
 }
