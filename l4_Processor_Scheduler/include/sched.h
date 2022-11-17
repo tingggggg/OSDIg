@@ -43,7 +43,7 @@ struct task_struct {
 };
 
 extern void sched_init(void);
-extern void schedule(void);
+extern void schedule(char *call_from);
 extern void timer_tick(void);
 extern void preempt_disable(void);
 extern void preempt_enable(void);

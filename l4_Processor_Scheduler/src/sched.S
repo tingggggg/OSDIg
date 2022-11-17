@@ -19,6 +19,6 @@ cpu_switch_to:  // x0 prev, x1 next
 	ldp	x25, x26, [x8], #16
 	ldp	x27, x28, [x8], #16
 	ldp	x29, x9, [x8], #16
-	ldr	x30, [x8]
+	ldr	x30, [x8]				// x30 is the link register
 	mov	sp, x9
-	ret
+	ret							// goto x30 address

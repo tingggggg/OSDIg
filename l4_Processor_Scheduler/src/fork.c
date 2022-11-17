@@ -1,6 +1,7 @@
 #include "mm.h"
 #include "sched.h"
 #include "entry.h"
+#include "printf.h"
 
 int copy_process(unsigned long fn, unsigned long arg)
 {
@@ -22,6 +23,7 @@ int copy_process(unsigned long fn, unsigned long arg)
     
     int pid = nr_tasks++;
     task[pid] = p;
+    printf("copy_process: pid=%d, sp=0x%x\r\n", pid, p->cpu_context.sp);
     preempt_enable();
     return 0;
 }

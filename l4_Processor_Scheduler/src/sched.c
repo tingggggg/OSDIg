@@ -17,7 +17,19 @@ void preempt_enable(void)
     current->preempt_count--;
 }
 
-void _schedule(void)
+void print_debug_tasks(void) 
+{
+    printf("tasks:\r\n");
+    struct task_struct *p;
+    for (int i = 0; i < NR_TASKS; i++) {
+        p = task[i];
+        if (!p)
+            return;
+        printf("\tpid=%d, sp=0x%x\r\n", i, p->cpu_context.sp);
+    }
+}
+
+void _schedule(char *call_from)
 {
     preempt_disable();
     int next, c;
@@ -43,14 +55,18 @@ void _schedule(void)
             }
         }
     }
+    if (task[next] != current) {
+        printf("_schedule(%s) switch_to next task (pid=%x)\r\n", call_from, next);
+        print_debug_tasks();
+    }
     switch_to(task[next]);
     preempt_enable();
 }
 
-void schedule(void)
+void schedule(char *call_from)
 {
     current->counter = 0;
-    _schedule();
+    _schedule(call_from);
 }
 
 void switch_to(struct task_struct *next)
@@ -75,6 +91,6 @@ void timer_tick()
     }
     current->counter = 0;
     enable_irq();
-    _schedule();
+    _schedule("irq_handler");
     disable_irq();
 }
