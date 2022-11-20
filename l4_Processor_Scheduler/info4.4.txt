@@ -1,0 +1,27 @@
+----------- Task created -----------
+
+Struct task allocated at 0x00400000.
+(Origin tail task allocated at 0x000036a0.)
+p->cpu_context.x19 = 0x00000800. (fn)
+p->cpu_context.x20 = 0x00002f28. (arg)
+p->cpu_context.pc  = 0x00002e08. (ret_from_fork)
+p->cpu_context.sp  = 0x00401000. (sp)
+
+----------- Task created -----------
+
+Struct task allocated at 0x00401000.
+(Origin tail task allocated at 0x00400000.)
+p->cpu_context.x19 = 0x00000800. (fn)
+p->cpu_context.x20 = 0x00002f58. (arg)
+p->cpu_context.pc  = 0x00002e08. (ret_from_fork)
+p->cpu_context.sp  = 0x00402000. (sp)
+
+----------- Task created -----------
+
+Struct task allocated at 0x00402000.
+(Origin tail task allocated at 0x00401000.)
+p->cpu_context.x19 = 0x00000800. (fn)
+p->cpu_context.x20 = 0x00002f88. (arg)
+p->cpu_context.pc  = 0x00002e08. (ret_from_fork)
+p->cpu_context.sp  = 0x00403000. (sp)
+12345123abcdeabcdeab!@#$^!@#$^!@451234512345cdeabcdeabcd#$^!@#$^!@#$123451234512eabcdeabcdea^!@#$^!@#$^!345123451234bcdeabcdeabc@#$^!@#$^!@#512345123451deabcdeabcde$^!@#$^!@#$^234512345123abcdeabcdeab!@#$^!@#$^!@451

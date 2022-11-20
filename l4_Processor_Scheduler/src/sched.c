@@ -4,8 +4,9 @@
 
 static struct task_struct init_task = INIT_TASK;
 struct task_struct *current = &(init_task);
-struct task_struct *task[NR_TASKS] = {&(init_task), };
-int nr_tasks = 1;
+struct task_struct *head_task = &(init_task); // Creat a head pointer, that point to init_task
+// struct task_struct *task[NR_TASKS] = {&(init_task), };
+// int nr_tasks = 1;
 
 void preempt_disable(void)
 {
@@ -17,44 +18,42 @@ void preempt_enable(void)
     current->preempt_count--;
 }
 
-void print_debug_tasks(void) 
-{
-    struct task_struct *p;
-    printf("\n\r----------- Task switch -----------\r\n");
-    for (int i = 0; i < NR_TASKS; i++) {
-        p = task[i];
-        if (!p)
-            return;
+// void print_debug_tasks(void) 
+// {
+//     struct task_struct *p;
+//     printf("\n\r----------- Task switch -----------\r\n");
+//     for (int i = 0; i < NR_TASKS; i++) {
+//         p = task[i];
+//         if (!p)
+//             return;
 
-        printf("\n\r\ttask[%d] counter = %d\n\r", i, p->counter);
-		printf("\ttask[%d] priority = %d\n\r", i, p->priority);
-		printf("\ttask[%d] preempt_count = %d\n\r", i, p->preempt_count);
-		printf("\ttask[%d] sp = 0x%08x\n\r", i, p->cpu_context.sp);
-        printf("\n\r------------------------------\r\n");
-    }
-}
+//         printf("\n\r\ttask[%d] counter = %d\n\r", i, p->counter);
+// 		printf("\ttask[%d] priority = %d\n\r", i, p->priority);
+// 		printf("\ttask[%d] preempt_count = %d\n\r", i, p->preempt_count);
+// 		printf("\ttask[%d] sp = 0x%08x\n\r", i, p->cpu_context.sp);
+//         printf("\n\r------------------------------\r\n");
+//     }
+// }
 
 void _schedule(char *call_from)
 {
     preempt_disable();
-    int next, c;
-    struct task_struct *p;
+    int c;
+    struct task_struct *p, *next_task;
     while (1) {
         c = -1;
-        next = 0;
-        for (int i = 0; i < NR_TASKS; i++) {
-            p = task[i];
+        for (p = head_task; p; p = p->next_task) {
             if (p && p->state == TASK_RUNNING && p->counter > c) {
                 c = p->counter;
-                next = i;
+                next_task = p; // point to next task that waiting switched
             }
         }
+
         if (c) {
             break;
         }
 
-        for (int i = 0; i < NR_TASKS; i++) {
-            p = task[i];
+        for (p = head_task; p; p = p->next_task) {
             if (p) {
                 p->counter = (p->counter >> 1) + p->priority;
             }
@@ -64,7 +63,7 @@ void _schedule(char *call_from)
     //     printf("_schedule(%s) switch_to next task (pid=%x)\r\n", call_from, next);
     //     print_debug_tasks();
     // }
-    switch_to(task[next]);
+    switch_to(next_task);
     preempt_enable();
 }
 
