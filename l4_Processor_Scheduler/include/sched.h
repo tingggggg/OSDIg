@@ -2,6 +2,7 @@
 #define _SCHED_H
 
 #define THREAD_CPU_CONTEXT      0 // offset of cpu_context in task_struct
+#define THREAD_FPSIME_CONTEXT	(14 * 64 / 8) // 14 = 13 registers of cpu_context + 1 to point to the next free position
 
 #ifndef __ASSEMBLER__
 
@@ -34,8 +35,15 @@ struct cpu_context {
 	unsigned long pc;
 };
 
+struct fpsimd_context {
+	__uint128_t v[32];
+	unsigned int fpsr;
+	unsigned int fpcr;
+};
+
 struct task_struct {
 	struct cpu_context cpu_context;
+	struct fpsimd_context fpsimd_context;
 	long state;	
 	long counter;
 	long priority;
@@ -51,8 +59,9 @@ extern void switch_to(struct task_struct* next);
 extern void cpu_switch_to(struct task_struct* prev, struct task_struct* next);
 
 #define INIT_TASK \
-/*cpu_context*/	{ {0,0,0,0,0,0,0,0,0,0,0,0,0}, \
-/* state etc */	0,0,1, 0 \
+/*cpu_context*/	{ {0,0,0,0,0, 0,0,0,0,0, 0,0,0}, \
+/*fpsimd_context*/ {{0}, 0, 0}, \
+/* state etc */	0,0,1,0 \
 }
 
 #endif /* __ASSEMBLER__ */
