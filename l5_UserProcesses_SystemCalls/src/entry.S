@@ -158,6 +158,10 @@ el0_sync:
 	lsr x24, x25, #ESR_ELx_EC_SHIFT	// exception class
 	cmp x24, #ESR_ELx_EC_SVC64	// SVC in 64-bit state
 	b.eq el0_svc		// goto el0_svc if x24 equal ESR_ELx_EC_SVC64
+
+	cmp x24, #ESR_ELx_EC_INSTR // trapped mrs DAIF
+	b.eq el0_sys_instr
+
 	handle_invalid_entry 0, SYNC_ERROR
 
 sc_nr	.req x25 // number of system calls
@@ -179,8 +183,15 @@ ni_sys:
 	handle_invalid_entry 0, SYSCALL_ERROR
 ret_from_syscall:
 	bl disable_irq
-	str x0, [sp, #S_X0] // returnen x0
+	str x0, [sp, #S_X0] // return x0
 	kernel_exit 0
+
+el0_sys_instr:
+	bl show_trapped_sys_instr
+	ldr x22, [sp, #16 * 16] // skip the trapped mrs instruction
+	add x22, x22, #4
+	str x22, [sp, #16 * 16]
+	b ret_to_user
 
 .globl ret_from_fork
 ret_from_fork:

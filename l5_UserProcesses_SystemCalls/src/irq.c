@@ -39,6 +39,10 @@ void show_invalid_entry_message(int type, unsigned long esr, unsigned long addre
 	printf("%s, ESR: %x, address: %x\r\n", entry_error_messages[type], esr, address);
 }
 
+void show_trapped_sys_instr() {
+	printf("Trapped mrs DAIF\r\n");
+}
+
 void handle_irq(void)
 {
     unsigned int irq = get32(IRQ_PENDING_1);

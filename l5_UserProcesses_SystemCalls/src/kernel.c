@@ -12,9 +12,13 @@ void user_process1(char *array)
     char buf[2] = {0};
     while (1) {
         for (int i = 0; i < 5; i++) {
+            if (array[i] == '1') {
+                get_daif();
+            }
+
             buf[0] = array[i];
             call_sys_write(buf);
-            delay(100000);
+            delay(500000);
         }
     }
 }

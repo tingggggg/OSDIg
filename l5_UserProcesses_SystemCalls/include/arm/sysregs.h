@@ -45,5 +45,6 @@
 
 #define ESR_ELx_EC_SHIFT		26
 #define ESR_ELx_EC_SVC64		0x15
+#define ESR_ELx_EC_INSTR        0x18 /* Trapped MSR, MRS, or System instruction execution, that is not reported using EC 0x00, 0x01, or 0x07*/
 
 #endif

@@ -20,3 +20,7 @@ delay:
     bne delay
     ret
     
+.globl get_daif
+get_daif:
+    mrs x0, DAIF
+    ret

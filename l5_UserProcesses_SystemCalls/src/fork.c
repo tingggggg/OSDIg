@@ -12,7 +12,7 @@ int copy_process(unsigned long clone_flags, unsigned long fn, unsigned long arg,
 
     p = (struct task_struct *) get_free_page();
     if (!p)
-        return 1;
+        return -1;
 
     struct pt_regs *childregs = task_pt_regs(p);
     memzero((unsigned long)childregs, sizeof(struct pt_regs));
