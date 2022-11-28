@@ -44,3 +44,8 @@ thread_start:
     mov x8, #SYS_EXIT_NUMBER
     svc 0x0
     
+.globl call_sys_priority
+call_sys_priority:
+    mov w8, #SYS_PRIORITY_NUMBER
+    svc #0
+    ret

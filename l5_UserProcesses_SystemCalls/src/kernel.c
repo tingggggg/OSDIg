@@ -10,15 +10,16 @@
 void user_process1(char *array)
 {
     char buf[2] = {0};
+    long priority = 1;
     while (1) {
-        for (int i = 0; i < 5; i++) {
-            if (array[i] == '1') {
-                get_daif();
-            }
+        if (array[0] == '1') {
+            call_sys_priority(++priority / 2);
+        }
 
+        for (int i = 0; i < 6; i++) {
             buf[0] = array[i];
             call_sys_write(buf);
-            delay(500000);
+            delay(100000);
         }
     }
 }
